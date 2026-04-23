@@ -1,0 +1,6 @@
+@ConnectHub.SignalR_HostAddress = http://localhost:5050
+
+GET {{ConnectHub.SignalR_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

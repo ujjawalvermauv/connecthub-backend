@@ -16,6 +16,7 @@ namespace ConnectHub.Message.Controllers
         }
 
         [HttpGet("direct")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetDirectMessages([FromQuery] int senderId, [FromQuery] int receiverId)
         {
             var messages = await _messageService.GetDirectMessages(senderId, receiverId);
@@ -23,6 +24,7 @@ namespace ConnectHub.Message.Controllers
         }
 
         [HttpGet("room/{roomId:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetRoomMessages([FromRoute] int roomId)
         {
             var messages = await _messageService.GetRoomMessages(roomId);
@@ -30,6 +32,7 @@ namespace ConnectHub.Message.Controllers
         }
 
         [HttpGet("unread/{receiverId:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetUnread([FromRoute] int receiverId)
         {
             var messages = await _messageService.GetUnreadMessages(receiverId);
@@ -37,6 +40,7 @@ namespace ConnectHub.Message.Controllers
         }
 
         [HttpGet("unread/count/{receiverId:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetUnreadCount([FromRoute] int receiverId)
         {
             var count = await _messageService.GetUnreadCount(receiverId);
@@ -44,6 +48,7 @@ namespace ConnectHub.Message.Controllers
         }
 
         [HttpGet("recent/{userId:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetRecentChats([FromRoute] int userId)
         {
             var messages = await _messageService.GetRecentChats(userId);
@@ -51,6 +56,7 @@ namespace ConnectHub.Message.Controllers
         }
 
         [HttpGet("search")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> SearchMessages([FromQuery] string query, [FromQuery] int userId)
         {
             var messages = await _messageService.SearchMessages(query, userId);
@@ -58,6 +64,7 @@ namespace ConnectHub.Message.Controllers
         }
 
         [HttpGet("by-room/{roomId:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetMessagesByRoom([FromRoute] int roomId)
         {
             var messages = await _messageService.GetMessagesByRoom(roomId);
@@ -65,6 +72,7 @@ namespace ConnectHub.Message.Controllers
         }
 
         [HttpPut("mark-read/{messageId:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> MarkAsRead([FromRoute] int messageId)
         {
             await _messageService.MarkAsRead(messageId);
@@ -72,6 +80,7 @@ namespace ConnectHub.Message.Controllers
         }
 
         [HttpPut("mark-all-read")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> MarkAllAsRead([FromQuery] int receiverId, [FromQuery] int? roomId)
         {
             await _messageService.MarkAllAsRead(receiverId, roomId);
@@ -79,6 +88,9 @@ namespace ConnectHub.Message.Controllers
         }
 
         [HttpPut("edit/{messageId:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> EditMessage([FromRoute] int messageId, [FromBody] EditMessageRequest request)
         {
             try
@@ -98,6 +110,7 @@ namespace ConnectHub.Message.Controllers
         }
 
         [HttpDelete("{messageId:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> DeleteMessage([FromRoute] int messageId)
         {
             await _messageService.DeleteMessage(messageId);

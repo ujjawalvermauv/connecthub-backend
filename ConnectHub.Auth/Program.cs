@@ -8,14 +8,14 @@ using ConnectHub.Auth.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ Add Services
+// Add Services
 builder.Services.AddControllers();
 
-// ✅ DB Connection
+//  DB Connection
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ✅ JWT Authentication
+//  JWT Authentication
 builder.Services.AddAuthentication("Bearer")
 .AddJwtBearer("Bearer", options =>
 {
@@ -30,19 +30,19 @@ builder.Services.AddAuthentication("Bearer")
     };
 });
 
-// ✅ Authorization
+//Authorization
 builder.Services.AddAuthorization();
 
-// ✅ Register Services
+// Register Services
 builder.Services.AddScoped<IUserService, UserService>();
 
-// Swagger (optional but useful)
+// Swagger Configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// ✅ Middleware Pipeline
+//  Middleware Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -51,7 +51,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// 🔥 IMPORTANT ORDER
+// IMPORTANT ORDER
 app.UseAuthentication();   // FIRST
 app.UseAuthorization();    // SECOND
 

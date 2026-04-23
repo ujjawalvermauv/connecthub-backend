@@ -5,7 +5,7 @@ namespace ConnectHub.Message.Repositories
 {
     public interface IMessageRepository
     {
-        Task<MessageEntity?> FindByMessageId(int messageId);
+        Task<MessageEntity?> FindByMessageId(int messageId);//async operation not blocking db 
         Task<List<MessageEntity>> FindBySenderAndReceiver(int senderId, int receiverId);
         Task<List<MessageEntity>> FindByRoomId(int roomId);
         Task<List<MessageEntity>> FindUnreadByReceiverId(int receiverId);

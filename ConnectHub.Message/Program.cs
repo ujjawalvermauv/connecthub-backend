@@ -7,16 +7,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+var connectionString = builder.Configuration.GetConnectionString("MessageDb");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+	throw new InvalidOperationException("ConnectionStrings:MessageDb is not configured for ConnectHub.Message.");
+}
+
 builder.Services.AddDbContext<MessageDbContext>(options =>
 {
-	var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-	if (!string.IsNullOrWhiteSpace(connectionString))
-	{
-		options.UseSqlServer(connectionString);
-		return;
-	}
-
-	options.UseInMemoryDatabase("ConnectHubMessageDb");
+	options.UseSqlServer(connectionString);
 });
 
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
@@ -30,7 +30,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
 	var dbContext = scope.ServiceProvider.GetRequiredService<MessageDbContext>();
-	await dbContext.Database.EnsureCreatedAsync();
+    await dbContext.Database.MigrateAsync();
 
 	if (!await dbContext.Messages.AnyAsync())
 	{

@@ -12,8 +12,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // ✅ DB Connection
+var connectionString = builder.Configuration.GetConnectionString("AuthDb");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("ConnectionStrings:AuthDb is not configured for ConnectHub.Auth.");
+}
+
 builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 // ✅ JWT Authentication
 builder.Services.AddAuthentication("Bearer")
@@ -41,6 +48,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
 
 // ✅ Middleware Pipeline
 if (app.Environment.IsDevelopment())

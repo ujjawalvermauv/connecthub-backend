@@ -2,6 +2,10 @@ using ConnectHub.Auth.Data;
 using ConnectHub.Auth.Interfaces;
 using ConnectHub.Auth.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace ConnectHub.Auth.Services
 {
@@ -22,6 +26,7 @@ namespace ConnectHub.Auth.Services
             user.PasswordHash = _passwordHasher.HashPassword(user, user.PasswordHash);
 
             // Set default values
+            user.Role = string.IsNullOrWhiteSpace(user.Role) ? "User" : user.Role;
             user.IsActive = true;
             user.IsOnline = false;
             user.CreatedAt = DateTime.UtcNow;
@@ -51,8 +56,23 @@ namespace ConnectHub.Auth.Services
             user.LastSeen = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            // Return dummy JWT token (to be replaced with real JWT later)
-            return "JWT_TOKEN_HERE";
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new(ClaimTypes.Name, user.UserName),
+                new(ClaimTypes.Email, user.Email),
+                new(ClaimTypes.Role, user.Role)
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("SuperSecretKey123"));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(12),
+                signingCredentials: credentials);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

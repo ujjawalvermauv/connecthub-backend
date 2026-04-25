@@ -1,0 +1,36 @@
+# Build folders
+bin/
+obj/
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# App settings (IMPORTANT)
+appsettings.Development.json
+appsettings.Local.json
+
+# User secrets (VERY IMPORTANT)
+secrets.json
+
+# Environment files
+.env
+
+# Rider / JetBrains
+.idea/
+
+# Node (if frontend later)
+node_modules/

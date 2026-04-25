@@ -88,11 +88,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\91914\\Desktop\\ConnectHub\\ConnectHub.ChatHub\\ConnectHub.ChatHub.csproj",
+      "projectUniqueName": "C:\\Users\\91914\\Desktop\\GLA\\project\\ConnectHub.ChatHub\\ConnectHub.ChatHub.csproj",
       "projectName": "ConnectHub.ChatHub",
-      "projectPath": "C:\\Users\\91914\\Desktop\\ConnectHub\\ConnectHub.ChatHub\\ConnectHub.ChatHub.csproj",
+      "projectPath": "C:\\Users\\91914\\Desktop\\GLA\\project\\ConnectHub.ChatHub\\ConnectHub.ChatHub.csproj",
       "packagesPath": "C:\\Users\\91914\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\91914\\Desktop\\ConnectHub\\ConnectHub.ChatHub\\obj\\",
+      "outputPath": "C:\\Users\\91914\\Desktop\\GLA\\project\\ConnectHub.ChatHub\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\91914\\AppData\\Roaming\\NuGet\\NuGet.Config"

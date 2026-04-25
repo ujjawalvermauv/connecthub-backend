@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\91914\\Desktop\\ConnectHub\\ConnectHub.Message\\ConnectHub.Message.csproj": {}
+    "C:\\Users\\91914\\Desktop\\GLA\\project\\ConnectHub.Message\\ConnectHub.Message.csproj": {}
   },
   "projects": {
-    "C:\\Users\\91914\\Desktop\\ConnectHub\\ConnectHub.Message\\ConnectHub.Message.csproj": {
+    "C:\\Users\\91914\\Desktop\\GLA\\project\\ConnectHub.Message\\ConnectHub.Message.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\91914\\Desktop\\ConnectHub\\ConnectHub.Message\\ConnectHub.Message.csproj",
+        "projectUniqueName": "C:\\Users\\91914\\Desktop\\GLA\\project\\ConnectHub.Message\\ConnectHub.Message.csproj",
         "projectName": "ConnectHub.Message",
-        "projectPath": "C:\\Users\\91914\\Desktop\\ConnectHub\\ConnectHub.Message\\ConnectHub.Message.csproj",
+        "projectPath": "C:\\Users\\91914\\Desktop\\GLA\\project\\ConnectHub.Message\\ConnectHub.Message.csproj",
         "packagesPath": "C:\\Users\\91914\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\91914\\Desktop\\ConnectHub\\ConnectHub.Message\\obj\\",
+        "outputPath": "C:\\Users\\91914\\Desktop\\GLA\\project\\ConnectHub.Message\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\91914\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -47,6 +47,24 @@
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[10.0.6, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[10.0.6, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[10.0.6, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[10.0.6, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[10.0.1, )"
             }
           },
           "imports": [
@@ -68,7 +86,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.106/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.107/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

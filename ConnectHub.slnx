@@ -1,5 +1,9 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/ConnectHub.Gateway.API/ConnectHub.Gateway.API.csproj" />
+    <Project Path="ConnectHub.Auth/ConnectHub.Auth.csproj" />
+    <Project Path="ConnectHub.Message/ConnectHub.Message.csproj" />
+    <Project Path="ConnectHub.Notification/ConnectHub.Notification.csproj" />
+    <Project Path="ConnectHub.Media/ConnectHub.Media.csproj" />
+    <Project Path="ConnectHub.Media.Tests/ConnectHub.Media.Tests.csproj" />
   </Folder>
 </Solution>

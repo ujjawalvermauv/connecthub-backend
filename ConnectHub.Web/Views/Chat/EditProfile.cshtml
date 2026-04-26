@@ -1,0 +1,11 @@
+@model ConnectHub.Web.ViewModels.EditProfileViewModel
+@{
+    ViewData["Title"] = "Edit Profile";
+}
+<h2>Edit Profile</h2>
+<form asp-action="EditProfile" method="post">
+    <input asp-for="DisplayName" placeholder="Display Name" />
+    <input asp-for="Bio" placeholder="Bio" />
+    <input asp-for="AvatarUrl" placeholder="Avatar URL" />
+    <button type="submit">Save</button>
+</form>

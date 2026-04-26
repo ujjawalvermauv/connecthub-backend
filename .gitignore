@@ -1,10 +1,46 @@
+<<<<<<< HEAD
+=======
+# Build folders
+>>>>>>> media-service
 bin/
 obj/
 **/bin/
 **/obj/
+<<<<<<< HEAD
+=======
+
+# Visual Studio
+>>>>>>> media-service
 .vs/
 .vscode/
 *.user
 *.suo
 *.userosscache
+<<<<<<< HEAD
 *.sln.docstates
+=======
+*.sln.docstates
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# App settings (IMPORTANT)
+appsettings.Development.json
+appsettings.Local.json
+
+# User secrets (VERY IMPORTANT)
+secrets.json
+
+# Environment files
+.env
+
+# Rider / JetBrains
+.idea/
+
+# Node (if frontend later)
+node_modules/
+>>>>>>> media-service

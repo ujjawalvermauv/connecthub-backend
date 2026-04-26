@@ -1,0 +1,10 @@
+@model ConnectHub.Web.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+}
+<h2>Login</h2>
+<form asp-action="Login" method="post">
+    <input asp-for="UsernameOrEmail" placeholder="Username or Email" />
+    <input asp-for="Password" type="password" placeholder="Password" />
+    <button type="submit">Login</button>
+</form>

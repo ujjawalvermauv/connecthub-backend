@@ -1,46 +1,47 @@
-<<<<<<< HEAD
-=======
-# Build folders
->>>>>>> media-service
+# =========================
+# .NET Build Files
+# =========================
 bin/
 obj/
 **/bin/
 **/obj/
-<<<<<<< HEAD
-=======
 
-# Visual Studio
->>>>>>> media-service
+# =========================
+# Visual Studio / IDE
+# =========================
 .vs/
 .vscode/
+.idea/
 *.user
 *.suo
 *.userosscache
-<<<<<<< HEAD
-*.sln.docstates
-=======
 *.sln.docstates
 
-# Logs
+# =========================
+# Logs & Temp
+# =========================
 *.log
+*.tmp
+*.cache
 
-# OS files
+# =========================
+# OS Files
+# =========================
 .DS_Store
 Thumbs.db
 
-# App settings (IMPORTANT)
+# =========================
+# Environment & Secrets
+# =========================
+.env
+secrets.json
 appsettings.Development.json
 appsettings.Local.json
 
-# User secrets (VERY IMPORTANT)
-secrets.json
-
-# Environment files
-.env
-
-# Rider / JetBrains
-.idea/
-
-# Node (if frontend later)
+# =========================
+# Frontend / Node
+# =========================
 node_modules/
->>>>>>> media-service
+dist/
+build/
+.angular_cache/

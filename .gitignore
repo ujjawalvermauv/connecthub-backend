@@ -41,7 +41,9 @@ appsettings.Local.json
 # =========================
 # Frontend / Node
 # =========================
+
 node_modules/
+txt-output/
 dist/
 build/
 .angular_cache/

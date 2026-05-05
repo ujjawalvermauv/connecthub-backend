@@ -23,6 +23,12 @@ namespace ConnectHub.Auth.Controllers
         {
             try
             {
+                // Server-side validation: email is required
+                if (string.IsNullOrWhiteSpace(request.Email))
+                {
+                    return BadRequest(new { message = "Email is required" });
+                }
+
                 var user = new User
                 {
                     UserName = request.UserName,
@@ -60,6 +66,125 @@ namespace ConnectHub.Auth.Controllers
             catch (InvalidOperationException ex)
             {
                 return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Search for users
+        /// </summary>
+        [HttpGet("search")]
+        public async Task<ActionResult<List<User>>> Search([FromQuery] string query)
+        {
+            try
+            {
+                var users = await _userService.SearchUsersAsync(query);
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get all users
+        /// </summary>
+        [HttpGet("all")]
+        public async Task<ActionResult<List<User>>> GetAll()
+        {
+            try
+            {
+                var users = await _userService.GetAllUsersAsync();
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Update user profile
+        /// </summary>
+        [HttpPut("update/{userId}")]
+        public async Task<ActionResult<User>> UpdateProfile(int userId, [FromBody] User profile)
+        {
+            try
+            {
+                // Prevent accidentally clearing the email to empty string
+                if (profile != null && profile.Email != null && string.IsNullOrWhiteSpace(profile.Email))
+                {
+                    return BadRequest(new { message = "Email cannot be empty" });
+                }
+                var updatedUser = await _userService.UpdateProfileAsync(userId, profile);
+                if (updatedUser == null) return NotFound();
+                return Ok(updatedUser);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Upload avatar (Simplified)
+        /// </summary>
+        [HttpPost("{userId}/avatar")]
+        public async Task<ActionResult> UploadAvatar(int userId, IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0) return BadRequest("No file uploaded");
+
+                // Path to wwwroot/avatars
+                var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var avatarsPath = Path.Combine(wwwrootPath, "avatars");
+                
+                if (!Directory.Exists(avatarsPath))
+                {
+                    Directory.CreateDirectory(avatarsPath);
+                }
+
+                // Generate a unique filename to prevent caching issues
+                var extension = Path.GetExtension(file.FileName);
+                var fileName = $"user_{userId}_{DateTime.Now.Ticks}{extension}";
+                var filePath = Path.Combine(avatarsPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // The URL path should match the StaticFile mapping in Program.cs
+                var avatarUrl = $"/api/users/avatars/{fileName}";
+                
+                // Update user record in DB
+                var profile = new User { AvatarUrl = avatarUrl };
+                await _userService.UpdateProfileAsync(userId, profile);
+                
+                return Ok(new { url = avatarUrl });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Remove avatar
+        /// </summary>
+        [HttpDelete("{userId}/avatar")]
+        public async Task<ActionResult> RemoveAvatar(int userId)
+        {
+            try
+            {
+                var profile = new User { AvatarUrl = null };
+                await _userService.UpdateProfileAsync(userId, profile);
+                return Ok(new { message = "Avatar removed" });
             }
             catch (Exception ex)
             {

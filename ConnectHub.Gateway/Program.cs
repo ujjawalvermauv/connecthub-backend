@@ -7,7 +7,7 @@ builder.Services.AddReverseProxy()
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("Angular", policy =>
+    options.AddPolicy("AllowAngularDev", policy =>
     {
         policy.WithOrigins(
             "http://localhost:4200",
@@ -21,6 +21,6 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-app.UseCors("Angular");
+app.UseCors("AllowAngularDev");
 app.MapReverseProxy();
 app.Run();

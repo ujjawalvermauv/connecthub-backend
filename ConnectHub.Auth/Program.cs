@@ -1,10 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Linq;
 using ConnectHub.Auth.Data;
 using ConnectHub.Auth.Services;
 using ConnectHub.Auth.Interfaces;
+using ConnectHub.Auth.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +26,11 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 // ✅ JWT Authentication
+var secretKey = "ThisIsAReallyStrongSecretKeyForJWTAuth123456";
+var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+
+builder.Services.AddSingleton<SecurityKey>(signingKey);
+
 builder.Services.AddAuthentication("Bearer")
 .AddJwtBearer("Bearer", options =>
 {
@@ -32,27 +40,92 @@ builder.Services.AddAuthentication("Bearer")
         ValidateAudience = false,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes("SuperSecretKey123"))
+        IssuerSigningKey = signingKey
     };
 });
 
 // ✅ Authorization
 builder.Services.AddAuthorization();
 
+// ✅ 🔥 CORS (THIS WAS MISSING)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularDev", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 // ✅ Register Services
 builder.Services.AddScoped<IUserService, UserService>();
 
-// Swagger (optional but useful)
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Apply migrations
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
     await dbContext.Database.MigrateAsync();
+
+    if (!await dbContext.Users.AnyAsync(u => u.Email == "shubham@gmail.com"))
+    {
+        var hasher = new PasswordHasher<User>();
+        var seedUser = new User
+        {
+            UserName = "shubham",
+            DisplayName = "Shubham",
+            Email = "shubham@gmail.com",
+            Role = "User",
+            IsActive = true,
+            IsOnline = false,
+            CreatedAt = DateTime.UtcNow,
+            LastSeen = DateTime.UtcNow
+        };
+
+        seedUser.PasswordHash = hasher.HashPassword(seedUser, "1234567890");
+        dbContext.Users.Add(seedUser);
+    }
+
+    if (!await dbContext.Users.AnyAsync(u => u.Email == "sarthak@gmail.com"))
+    {
+        var hasher = new PasswordHasher<User>();
+        var seedUser = new User
+        {
+            UserName = "sarthak",
+            DisplayName = "Sarthak",
+            Email = "sarthak@gmail.com",
+            Role = "User",
+            IsActive = true,
+            IsOnline = false,
+            CreatedAt = DateTime.UtcNow,
+            LastSeen = DateTime.UtcNow
+        };
+
+        seedUser.PasswordHash = hasher.HashPassword(seedUser, "1234567890");
+        dbContext.Users.Add(seedUser);
+    }
+
+    // Normalize existing users that have missing/empty emails so future logins by email work
+    var usersToFix = await dbContext.Users.Where(u => u.Email == null || u.Email == "" || u.Email.Trim() == "").ToListAsync();
+    if (usersToFix.Any())
+    {
+        foreach (var u in usersToFix)
+        {
+            // prefer userName based email, fallback to a generic placeholder
+            var name = string.IsNullOrWhiteSpace(u.UserName) ? $"user_{u.UserId}" : u.UserName;
+            u.Email = $"{name}@example.com";
+        }
+        Console.WriteLine($"Normalized {usersToFix.Count} users with missing emails.");
+    }
+
+    await dbContext.SaveChangesAsync();
 }
 
 // ✅ Middleware Pipeline
@@ -62,11 +135,18 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
-// 🔥 IMPORTANT ORDER
-app.UseAuthentication();   // FIRST
-app.UseAuthorization();    // SECOND
+// 🔥 VERY IMPORTANT ORDER
+app.UseCors("AllowAngularDev");   // ✅ ADD THIS LINE HERE
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    RequestPath = "/api/users"
+});
 
 app.MapControllers();
 

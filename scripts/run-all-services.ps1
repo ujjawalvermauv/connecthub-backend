@@ -36,7 +36,7 @@ foreach ($proj in $csprojFiles) {
 }
 
 # Check for web folder without csproj (common dev setup)
-if (Test-Path (Join-Path $repoRoot 'ConnectHub.Web') -and -not (Get-ChildItem -Path (Join-Path $repoRoot 'ConnectHub.Web') -Filter *.csproj -Recurse -ErrorAction SilentlyContinue)) {
+if ((Test-Path (Join-Path $repoRoot 'ConnectHub.Web')) -and -not (Get-ChildItem -Path (Join-Path $repoRoot 'ConnectHub.Web') -Filter *.csproj -Recurse -ErrorAction SilentlyContinue)) {
     Write-Warning "Folder ConnectHub.Web exists but no .csproj found. Launch it manually if needed."
 }
 

@@ -6,7 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://localhost:5005");
+// Read media listen URL from config (fallback to http://localhost:5005)
+var mediaUrl = builder.Configuration["ServiceUrls:MediaUrl"] ?? "http://localhost:5005";
+builder.WebHost.UseUrls(mediaUrl);
 builder.WebHost.UseWebRoot("wwwroot");
 
 var webRootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
@@ -17,16 +19,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ✅ PHASE 1: Add CORS configuration
+// ✅ PHASE 1: Add CORS configuration (read allowed origins from config)
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                  ?? new[] { "http://localhost:4200" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular",
     policy =>
     {
-        policy.WithOrigins(
-            "http://localhost:4200",
-            "http://localhost:4201",
-            "http://localhost:4202")
+        policy.WithOrigins(corsOrigins)
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials();
@@ -41,7 +43,7 @@ if (string.IsNullOrWhiteSpace(mediaDbConnectionString))
 
 builder.Services.AddDbContext<MediaDbContext>(options =>
 {
-    options.UseSqlServer(mediaDbConnectionString);
+    options.UseNpgsql(mediaDbConnectionString);
 });
 
 builder.Services.Configure<AzureBlobOptions>(builder.Configuration.GetSection("AzureBlob"));

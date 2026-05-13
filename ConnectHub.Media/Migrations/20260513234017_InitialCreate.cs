@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ConnectHub.Media.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMediaDb : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,17 +15,17 @@ namespace ConnectHub.Media.Migrations
                 name: "MediaFiles",
                 columns: table => new
                 {
-                    FileId = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: false),
-                    UploadedBy = table.Column<int>(type: "int", nullable: false),
-                    FileName = table.Column<string>(type: "nvarchar(260)", maxLength: 260, nullable: false),
-                    ContentType = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    FileId = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    UploadedBy = table.Column<int>(type: "integer", nullable: false),
+                    FileName = table.Column<string>(type: "character varying(260)", maxLength: 260, nullable: false),
+                    ContentType = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     FileSizeKb = table.Column<long>(type: "bigint", nullable: false),
-                    BlobUrl = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    ThumbnailUrl = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    MessageId = table.Column<int>(type: "int", nullable: true),
-                    RoomId = table.Column<int>(type: "int", nullable: true),
-                    UploadedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    BlobUrl = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    ThumbnailUrl = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    MessageId = table.Column<int>(type: "integer", nullable: true),
+                    RoomId = table.Column<int>(type: "integer", nullable: true),
+                    UploadedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {

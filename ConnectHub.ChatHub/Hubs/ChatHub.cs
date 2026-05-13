@@ -39,22 +39,32 @@ namespace ConnectHub.ChatHub.Hubs
         private readonly ILogger<ChatHub> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
 
-        // Service URLs - MUST MATCH appsettings.json or actual service ports
-        private readonly string _messageServiceUrl = "http://localhost:5002/api/messages";
-        private readonly string _notificationServiceUrl = "http://localhost:5076/api/notifications";
+        // Service URLs - read from configuration so hosts/paths are configurable
+        private readonly string _gatewayBase;
+        private readonly string _messageServiceUrl;
+        private readonly string _notificationServiceUrl;
 
         public ChatHub(
             IUserConnectionManager connectionManager,
             IPresenceService presence,
             ChatHubDbContext db,
             ILogger<ChatHub> logger,
-            IHttpClientFactory httpClientFactory)
+            IHttpClientFactory httpClientFactory,
+            Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
             _connectionManager = connectionManager;
             _presence = presence;
             _db = db;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+
+            var gatewayBase = configuration["ServiceUrls:GatewayBase"]?.TrimEnd('/') ?? "http://localhost:5000";
+            var messagePath = configuration["ServiceUrls:MessageServicePath"] ?? "/api/messages";
+            var notificationPath = configuration["ServiceUrls:NotificationServicePath"] ?? "/api/notifications";
+
+            _gatewayBase = gatewayBase;
+            _messageServiceUrl = gatewayBase + messagePath;
+            _notificationServiceUrl = gatewayBase + notificationPath;
         }
 
         /// <summary>Extract Bearer token from query string or Authorization header for service-to-service calls.</summary>

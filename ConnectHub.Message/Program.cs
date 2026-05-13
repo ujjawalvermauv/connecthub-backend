@@ -32,7 +32,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 
 builder.Services.AddDbContext<MessageDbContext>(options =>
 {
-    options.UseSqlServer(connectionString);
+    options.UseNpgsql(connectionString);
 });
 
 // ── Authentication (for internal service-to-service calls from ChatHub) ───────
@@ -66,23 +66,17 @@ if (!string.IsNullOrWhiteSpace(jwtKey))
     builder.Services.AddAuthorization();
 }
 
-// ── CORS Policy ────────────────────────────────────────────────────────────────
+// ── CORS Policy (read allowed origins from configuration) ────────────────
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                  ?? (builder.Environment.IsDevelopment()
+                        ? new[] { "http://localhost:4200" }
+                        : new[] { "http://localhost:5000" });
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularDev", policy =>
     {
-        // Allow all frontend origins and internal backend services
-        var origins = builder.Environment.IsDevelopment()
-            ? new[] { 
-                "http://localhost:4200", "http://localhost:4201", 
-                "http://localhost:4202", "http://localhost:65320",
-                "http://localhost:5001", "http://localhost:5000", 
-                "http://localhost:5003", "http://localhost:5076", 
-                "http://localhost:5078"  
-            }
-            : new[] { "https://connecthub.example.com" };
-
-        policy.WithOrigins(origins)
+        policy.WithOrigins(corsOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .WithExposedHeaders("Content-Disposition");

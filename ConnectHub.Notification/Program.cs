@@ -28,18 +28,15 @@ builder.Services.AddLogging(logging =>
     logging.AddFilter("Microsoft.AspNetCore.Authentication", LogLevel.Debug);
 });
 
-// ── CORS Policy ─────────────────────────────────────────────────────────────
+// ── CORS Policy (read allowed origins from configuration) ────────────────
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                  ?? new[] { "http://localhost:4200" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularDev", policy =>
     {
-        // Development: Add all frontend ports (4200, 4201, 4202, etc.)
-        var origins = builder.Environment.IsDevelopment()
-            ? new[] { "http://localhost:4200", "http://localhost:4201", 
-                      "http://localhost:4202", "http://localhost:65320" }
-            : new[] { "https://connecthub.example.com" };
-
-        policy.WithOrigins(origins)
+        policy.WithOrigins(corsOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials() // REQUIRED for SignalR
@@ -165,7 +162,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 
 builder.Services.AddDbContext<NotificationDbContext>(options =>
 {
-    options.UseSqlServer(connectionString);
+    options.UseNpgsql(connectionString);
 });
 
 // ── SMTP Email Configuration ────────────────────────────────────────────────

@@ -23,7 +23,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 }
 
 builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
 
 // ✅ JWT Authentication
 var secretKey = "ThisIsAReallyStrongSecretKeyForJWTAuth123456";
@@ -47,12 +47,15 @@ builder.Services.AddAuthentication("Bearer")
 // ✅ Authorization
 builder.Services.AddAuthorization();
 
-// ✅ 🔥 CORS (THIS WAS MISSING)
+// ✅ 🔥 CORS (read allowed origins from configuration)
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                  ?? new[] { "http://localhost:4200" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularDev", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins(corsOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();

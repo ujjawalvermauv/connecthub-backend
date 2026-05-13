@@ -27,7 +27,7 @@ builder.Services.AddLogging(logging =>
 
 // ── Database ──────────────────────────────────────────────────────────────────
 builder.Services.AddDbContext<ChatHubDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("ChatHubDb")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("ChatHubDb")));
 
 // ── Authentication ───────────────────────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]
@@ -138,24 +138,15 @@ builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider,
 builder.Services.AddSingleton<IPresenceService, PresenceService>();
 builder.Services.AddSingleton<IUserConnectionManager, UserConnectionManager>();
 
-// ── CORS Policy (Allow frontend on all development ports + production) ────────
+// ── CORS Policy (read allowed origins from configuration) ────────────────
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                  ?? new[] { "http://localhost:4200" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularDev", policy =>
     {
-        // Development: localhost:4200 (original), 4201, 4202 (current), 65320
-        // Production: configure based on environment
-        var origins = builder.Environment.IsDevelopment()
-           ? new[]
-{
-    "http://localhost:4200",
-    "http://localhost:4201",
-    "http://localhost:4202",
-    "http://localhost:64817"
-}
-            : new[] { "https://connecthub.example.com" }; // Update with production domain
-
-        policy.WithOrigins(origins)
+        policy.WithOrigins(corsOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials() // REQUIRED for SignalR

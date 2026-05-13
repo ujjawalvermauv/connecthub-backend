@@ -14,12 +14,21 @@ namespace ConnectHub.Media.Services
         {
             // Connection string should be set using .NET User Secrets for local development
             // and Azure App Service Configuration or environment variables in production.
-            _connectionString = config["AzureBlob:ConnectionString"] ?? config["BlobStorage:ConnectionString"];
-            _containerName = config["AzureBlob:ContainerName"] ?? config["BlobStorage:ContainerName"];
-            if (string.IsNullOrWhiteSpace(_connectionString))
+            var connectionString = config["AzureBlob:ConnectionString"] ?? config["BlobStorage:ConnectionString"];
+            var containerName = config["AzureBlob:ContainerName"] ?? config["BlobStorage:ContainerName"];
+
+            if (string.IsNullOrWhiteSpace(connectionString))
             {
                 throw new InvalidOperationException("AzureBlob:ConnectionString (or BlobStorage:ConnectionString) is not configured. Set it using .NET User Secrets for local development or Azure App Service Configuration in production.");
             }
+
+            if (string.IsNullOrWhiteSpace(containerName))
+            {
+                throw new InvalidOperationException("AzureBlob:ContainerName (or BlobStorage:ContainerName) is not configured.");
+            }
+
+            _connectionString = connectionString;
+            _containerName = containerName;
         }
 
         public async Task<string> UploadFileAsync(Stream fileStream, string fileName)

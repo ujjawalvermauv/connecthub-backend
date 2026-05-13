@@ -9,12 +9,9 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $targets = @(
     @{ Name = "Auth"; Project = "ConnectHub.Auth/ConnectHub.Auth.csproj"; Context = "AuthDbContext"; Migration = "InitialAuthDb"; MigrationFolder = "ConnectHub.Auth/Migrations" },
     @{ Name = "Message"; Project = "ConnectHub.Message/ConnectHub.Message.csproj"; Context = "MessageDbContext"; Migration = "InitialMessageDb"; MigrationFolder = "ConnectHub.Message/Migrations" },
-<<<<<<< HEAD
-    @{ Name = "Notification"; Project = "ConnectHub.Notification/ConnectHub.Notification.csproj"; Context = "NotificationDbContext"; Migration = "InitialNotificationDb"; MigrationFolder = "ConnectHub.Notification/Migrations" }
-=======
     @{ Name = "Notification"; Project = "ConnectHub.Notification/ConnectHub.Notification.csproj"; Context = "NotificationDbContext"; Migration = "InitialNotificationDb"; MigrationFolder = "ConnectHub.Notification/Migrations" },
+    @{ Name = "ChatHub"; Project = "ConnectHub.ChatHub/ConnectHub.ChatHub.csproj"; Context = "ChatHubDbContext"; Migration = "InitialChatHubDb"; MigrationFolder = "ConnectHub.ChatHub/Migrations" },
     @{ Name = "Media"; Project = "ConnectHub.Media/ConnectHub.Media.csproj"; Context = "MediaDbContext"; Migration = "InitialMediaDb"; MigrationFolder = "ConnectHub.Media/Migrations" }
->>>>>>> media-service
 )
 
 Push-Location $repoRoot

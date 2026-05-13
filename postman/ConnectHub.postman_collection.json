@@ -1,0 +1,656 @@
+{
+    "info": {
+        "name": "ConnectHub API",
+        "description": "Postman collection for the ConnectHub services. Requests target the local gateway at http://localhost:5000, which proxies Auth, Users, Messages, Rooms, Notifications, Media, and Presence endpoints. The Login request stores the JWT response token in the authToken variable.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Register User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userName\": \"demo.user\",\n  \"displayName\": \"Demo User\",\n  \"email\": \"demo.user@example.com\",\n  \"password\": \"P@ssw0rd123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/users/register"
+                        }
+                    }
+                },
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"{{testUserEmail}}\",\n  \"password\": \"{{testUserPassword}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/users/login"
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "  const data = pm.response.json();",
+                                    "  if (data && data.token) {",
+                                    "    pm.environment.set('authToken', data.token);",
+                                    "  }",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Google Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"idToken\": \"{{googleIdToken}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/auth/google-login"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Users",
+            "item": [
+                {
+                    "name": "Search Users",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/users/search?query={{userSearchQuery}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Users",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/users/all"
+                        }
+                    }
+                },
+                {
+                    "name": "Update Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userName\": \"demo.user\",\n  \"displayName\": \"Demo User Updated\",\n  \"email\": \"demo.user@example.com\",\n  \"avatarUrl\": \"https://example.com/avatar.png\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/users/update/{{testUserId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Upload Avatar",
+                    "request": {
+                        "method": "POST",
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": ""
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/users/{{testUserId}}/avatar"
+                        }
+                    }
+                },
+                {
+                    "name": "Remove Avatar",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/users/{{testUserId}}/avatar"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Messages",
+            "item": [
+                {
+                    "name": "Send Direct Message",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"senderId\": {{testSenderId}},\n  \"receiverId\": {{testReceiverId}},\n  \"content\": \"Hello from Postman\",\n  \"messageType\": \"TEXT\",\n  \"mediaUrl\": null,\n  \"replyToMessageId\": null\n}"
+                        },
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/messages/direct"
+                        }
+                    }
+                },
+                {
+                    "name": "Send Room Message",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"senderId\": {{testSenderId}},\n  \"roomId\": {{testRoomId}},\n  \"content\": \"Room message from Postman\",\n  \"messageType\": \"TEXT\",\n  \"mediaUrl\": null,\n  \"replyToMessageId\": null\n}"
+                        },
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/messages/room"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Direct Messages",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/messages/direct?senderId={{testSenderId}}&receiverId={{testReceiverId}}&page=1&pageSize=50"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Room Messages",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/messages/room/{{testRoomId}}?page=1&pageSize=50"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Unread Messages",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/messages/unread/{{testUserId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Unread Count",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/messages/unread-count/{{testUserId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Recent Chats",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/messages/recent-chats/{{testUserId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Search Messages",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/messages/search?keyword={{messageSearchKeyword}}&senderId={{testSenderId}}&receiverId={{testReceiverId}}&roomId={{testRoomId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Messages By Room",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/messages/by-room/{{testRoomId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Mark Message As Read",
+                    "request": {
+                        "method": "PUT",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/messages/{{testMessageId}}/read"
+                        }
+                    }
+                },
+                {
+                    "name": "Mark All Messages As Read",
+                    "request": {
+                        "method": "PUT",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/messages/read-all/{{testUserId}}?fromUserId={{testSenderId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Edit Message",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"content\": \"Updated message content from Postman\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/messages/{{testMessageId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Message",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/messages/{{testMessageId}}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Rooms",
+            "item": [
+                {
+                    "name": "Get Rooms",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/rooms"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Room By Id",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/rooms/{{testRoomId}}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Presence",
+            "item": [
+                {
+                    "name": "Get Online Users",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/presence/online-users"
+                        }
+                    }
+                },
+                {
+                    "name": "Check If User Is Online",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/presence/is-online/{{testUserId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Connection Count",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/presence/connection-count"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Online Users Info (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/presence/online-users-info"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Media",
+            "item": [
+                {
+                    "name": "Upload Media",
+                    "request": {
+                        "method": "POST",
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "File",
+                                    "type": "file",
+                                    "src": ""
+                                },
+                                {
+                                    "key": "UploadedBy",
+                                    "value": "{{testUserId}}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "MessageId",
+                                    "value": "{{testMessageId}}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "RoomId",
+                                    "value": "{{testRoomId}}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "ExpiresAt",
+                                    "value": "2026-12-31T23:59:59Z",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/media/upload"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Media By Id",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/media/{{testFileId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Media By User",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/media/byUser/{{testUserId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Media By Room",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/media/byRoom/{{testRoomId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Media By Message",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/media/byMessage/{{testMessageId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get SAS Url",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/media/sasUrl/{{testFileId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Media",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/media/{{testFileId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Media Stats",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/media/stats"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Notifications",
+            "item": [
+                {
+                    "name": "Get By Recipient",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/notifications/byRecipient/{{testRecipientId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Unread",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/notifications/unread/{{testRecipientId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Unread Count",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/notifications/unreadCount/{{testRecipientId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Notifications",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/notifications/all"
+                        }
+                    }
+                },
+                {
+                    "name": "Send Notification",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"recipientId\": {{testRecipientId}},\n  \"senderId\": {{testSenderId}},\n  \"type\": 0,\n  \"title\": \"New Message\",\n  \"message\": \"You have a new message\",\n  \"relatedId\": {{testMessageId}},\n  \"relatedType\": \"message\",\n  \"recipientEmail\": \"{{testRecipientEmail}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/notifications/send"
+                        }
+                    }
+                },
+                {
+                    "name": "Send Bulk Notifications (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"senderId\": {{testSenderId}},\n  \"type\": 0,\n  \"title\": \"Platform Update\",\n  \"message\": \"System maintenance tonight\",\n  \"relatedId\": null,\n  \"relatedType\": \"platform\",\n  \"recipients\": [\n    {\n      \"recipientId\": {{testRecipientId}},\n      \"recipientEmail\": \"{{testRecipientEmail}}\"\n    }\n  ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/notifications/sendBulk"
+                        }
+                    }
+                },
+                {
+                    "name": "Mark As Read",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/notifications/markAsRead/{{testNotificationId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Mark All Read",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/notifications/markAllRead/{{testRecipientId}}"
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Notification",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{gatewayBaseUrl}}/api/notifications/{{testNotificationId}}"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -47,3 +47,25 @@ txt-output/
 dist/
 build/
 .angular_cache/
+# Angular
+.angular/
+coverage/
+
+# Publish
+publish/
+
+# Rider / Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# Test Results
+TestResults/
+
+# Generated WWWRoot uploads
+wwwroot/uploads/
+
+# Postman local files
+.postman/
+# Uploaded media
+**/wwwroot/uploads/
+**/wwwroot/avatars/

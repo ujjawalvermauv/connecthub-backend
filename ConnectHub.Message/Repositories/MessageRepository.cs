@@ -103,14 +103,29 @@ namespace ConnectHub.Message.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<MessageEntity>> SearchMessages(string query, int userId)
+        public async Task<List<MessageEntity>> SearchMessages(string keyword, int? senderId, int? receiverId, int? roomId)
         {
-            query = query.Trim();
+            keyword = keyword.Trim();
 
-            return await _context.Messages
-                .Where(m => !m.IsDeleted &&
-                            (m.SenderId == userId || m.ReceiverId == userId) &&
-                            EF.Functions.Like(m.Content, $"%{query}%"))
+            var query = _context.Messages
+                .Where(m => !m.IsDeleted && EF.Functions.Like(m.Content, $"%{keyword}%"));
+
+            if (roomId.HasValue)
+            {
+                query = query.Where(m => m.RoomId == roomId.Value);
+            }
+
+            if (senderId.HasValue)
+            {
+                query = query.Where(m => m.SenderId == senderId.Value);
+            }
+
+            if (receiverId.HasValue)
+            {
+                query = query.Where(m => m.ReceiverId == receiverId.Value);
+            }
+
+            return await query
                 .OrderByDescending(m => m.SentAt)
                 .ToListAsync();
         }

@@ -29,6 +29,12 @@ namespace ConnectHub.Auth.Controllers
         {
             var clientId = _config["GoogleAuth:ClientId"];
             var redirect = _config["GoogleAuth:RedirectUri"];
+
+            if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(redirect))
+            {
+                return BadRequest(new { message = "Google Auth is not configured on the server. Please add ClientId and RedirectUri to appsettings.json." });
+            }
+
             var scope = "openid email profile";
             var url = $"https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={clientId}&redirect_uri={Uri.EscapeDataString(redirect)}&scope={Uri.EscapeDataString(scope)}&access_type=offline&prompt=consent";
             return Redirect(url);
@@ -39,9 +45,9 @@ namespace ConnectHub.Auth.Controllers
         {
             if (string.IsNullOrEmpty(code)) return BadRequest(new { message = "Missing code" });
 
-            var clientId = _config["GoogleAuth:ClientId"];
-            var clientSecret = _config["GoogleAuth:ClientSecret"];
-            var redirect = _config["GoogleAuth:RedirectUri"];
+            var clientId = _config["GoogleAuth:ClientId"] ?? string.Empty;
+            var clientSecret = _config["GoogleAuth:ClientSecret"] ?? string.Empty;
+            var redirect = _config["GoogleAuth:RedirectUri"] ?? string.Empty;
 
             using var http = new HttpClient();
 
@@ -68,6 +74,7 @@ namespace ConnectHub.Auth.Controllers
                 return BadRequest(new { message = "id_token missing from token response" });
 
             var idToken = idTokenProp.GetString();
+            if (string.IsNullOrEmpty(idToken)) return BadRequest(new { message = "id_token is null or empty" });
 
             // Decode id_token payload
             var parts = idToken.Split('.');
@@ -119,5 +126,135 @@ namespace ConnectHub.Auth.Controllers
             var redirectUrl = $"{frontend}/auth/callback#token={token}";
             return Redirect(redirectUrl);
         }
+
+    [HttpPost("google-login")]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+    {
+        if (string.IsNullOrEmpty(request.IdToken)) return BadRequest(new { message = "Missing id_token" });
+
+        try
+        {
+            // Decode id_token payload (Simplified verification for demo/local use)
+            // In production, use GoogleJsonWebSignature.ValidateAsync(request.IdToken)
+            var parts = request.IdToken.Split('.');
+            if (parts.Length < 2) return BadRequest(new { message = "Invalid id_token" });
+            
+            var payload = parts[1];
+            var padded = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
+            var bytes = Convert.FromBase64String(padded.Replace('-', '+').Replace('_', '/'));
+            var payloadJson = Encoding.UTF8.GetString(bytes);
+            
+            using var pj = JsonDocument.Parse(payloadJson);
+            var pjroot = pj.RootElement;
+            
+            var email = pjroot.GetProperty("email").GetString() ?? string.Empty;
+            var name = pjroot.TryGetProperty("name", out var n) ? n.GetString() ?? string.Empty : string.Empty;
+            var picture = pjroot.TryGetProperty("picture", out var p) ? p.GetString() ?? string.Empty : string.Empty;
+
+            if (string.IsNullOrEmpty(email)) return BadRequest(new { message = "Email missing from Google token" });
+
+            // Find or create user
+            var user = _db.Users.FirstOrDefault(u => u.Email == email);
+            if (user == null)
+            {
+                user = new User
+                {
+                    UserName = email.Split('@')[0],
+                    DisplayName = name,
+                    Email = email,
+                    PasswordHash = string.Empty,
+                    AvatarUrl = picture,
+                    IsActive = true,
+                    IsOnline = true,
+                    CreatedAt = DateTime.UtcNow,
+                    LastSeen = DateTime.UtcNow,
+                    Role = "User"
+                };
+                _db.Users.Add(user);
+                await _db.SaveChangesAsync();
+            }
+            else
+            {
+                user.IsOnline = true;
+                user.LastSeen = DateTime.UtcNow;
+                if (!string.IsNullOrEmpty(picture)) user.AvatarUrl = picture;
+                await _db.SaveChangesAsync();
+            }
+
+            // Issue JWT
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new("userName", user.UserName),
+                new("displayName", user.DisplayName),
+                new(ClaimTypes.Email, user.Email),
+                new(ClaimTypes.Role, user.Role ?? "User")
+            };
+
+            var creds = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256);
+            var jwt = new JwtSecurityToken(claims: claims, expires: DateTime.UtcNow.AddHours(12), signingCredentials: creds);
+            var token = new JwtSecurityTokenHandler().WriteToken(jwt);
+
+            return Ok(new 
+            { 
+                token = token,
+                userId = user.UserId,
+                userName = user.UserName,
+                displayName = user.DisplayName,
+                email = user.Email,
+                message = "Google login successful"
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = "Google authentication failed", error = ex.Message });
+        }
+    }
+
+    [HttpPost("test-token")]
+    public IActionResult TestToken()
+    {
+        // Development helper: return a valid JWT for userId=1 (create user if missing)
+        var user = _db.Users.FirstOrDefault(u => u.UserId == 1);
+        if (user == null)
+        {
+            user = new User
+            {
+                UserName = "testuser",
+                DisplayName = "Test User",
+                Email = "testuser@connecthub.local",
+                PasswordHash = string.Empty,
+                IsActive = true,
+                IsOnline = true,
+                CreatedAt = DateTime.UtcNow,
+                LastSeen = DateTime.UtcNow,
+                Role = "User"
+            };
+            _db.Users.Add(user);
+            _db.SaveChanges();
+        }
+
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+            new(ClaimTypes.Name, user.UserName),
+            new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Role, user.Role ?? "User")
+        };
+
+        var creds = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256);
+        var jwt = new JwtSecurityToken(claims: claims, expires: DateTime.UtcNow.AddHours(12), signingCredentials: creds);
+        var token = new JwtSecurityTokenHandler().WriteToken(jwt);
+
+        return Ok(new { token, userId = user.UserId, userName = user.UserName, displayName = user.DisplayName });
+    }
+
+    public class GoogleLoginRequest
+    {
+        public string IdToken { get; set; } = string.Empty;
     }
 }
+
+}
+
+

@@ -6,9 +6,32 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.UseUrls("http://localhost:5005");
+builder.WebHost.UseWebRoot("wwwroot");
+
+var webRootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+Directory.CreateDirectory(webRootPath);
+Directory.CreateDirectory(Path.Combine(webRootPath, "uploads"));
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// ✅ PHASE 1: Add CORS configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular",
+    policy =>
+    {
+        policy.WithOrigins(
+            "http://localhost:4200",
+            "http://localhost:4201",
+            "http://localhost:4202")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();
+    });
+});
 
 var mediaDbConnectionString = builder.Configuration.GetConnectionString("MediaDb");
 if (string.IsNullOrWhiteSpace(mediaDbConnectionString))
@@ -22,8 +45,22 @@ builder.Services.AddDbContext<MediaDbContext>(options =>
 });
 
 builder.Services.Configure<AzureBlobOptions>(builder.Configuration.GetSection("AzureBlob"));
+builder.Services.Configure<MediaStorageOptions>(builder.Configuration.GetSection("MediaStorage"));
 builder.Services.AddScoped<IMediaRepository, MediaRepository>();
-builder.Services.AddScoped<IBlobStorageGateway, AzureBlobStorageGateway>();
+builder.Services.AddScoped<IBlobStorageGateway>(serviceProvider =>
+{
+    var storageOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<MediaStorageOptions>>().Value;
+
+    if (string.Equals(storageOptions.Provider, "Azure", StringComparison.OrdinalIgnoreCase))
+    {
+        return new AzureBlobStorageGateway(serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<AzureBlobOptions>>());
+    }
+
+    return new LocalBlobStorageGateway(
+        serviceProvider.GetRequiredService<IWebHostEnvironment>(),
+        serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<MediaStorageOptions>>(),
+        serviceProvider.GetRequiredService<ILogger<LocalBlobStorageGateway>>());
+});
 builder.Services.AddScoped<IMediaService, MediaService>();
 builder.Services.AddHostedService<MediaCleanupHostedService>();
 
@@ -41,7 +78,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+// ✅ PHASE 1: Enable CORS middleware (must be before routing/auth)
+app.UseRouting();
+app.UseCors("AllowAngular");
+
 app.MapControllers();
 
 app.Run();

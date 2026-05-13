@@ -17,27 +17,50 @@ namespace ConnectHub.Media.Controllers
         }
 
         [HttpPost("upload")]
-        [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Upload([FromForm] UploadMediaRequest request)
+        public async Task<IActionResult> Upload([FromForm] IFormFile file)
         {
             try
             {
-                var mediaFile = await _mediaService.UploadFile(
-                    request.File,
-                    request.UploadedBy,
-                    request.MessageId,
-                    request.RoomId,
-                    request.ExpiresAt);
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest(new { message = "No file uploaded." });
+                }
 
-                return CreatedAtAction(nameof(GetById), new { fileId = mediaFile.FileId }, mediaFile);
+                var uploadsFolder = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    "uploads");
+
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                var uniqueFileName =
+                    Guid.NewGuid().ToString() + "_" + file.FileName;
+
+                var filePath = Path.Combine(
+                    uploadsFolder,
+                    uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var fileUrl =
+                    $"{Request.Scheme}://{Request.Host}/uploads/{uniqueFileName}";
+
+                return Ok(new
+                {
+                    success = true,
+                    url = fileUrl,
+                    fileName = uniqueFileName
+                });
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 

@@ -14,13 +14,13 @@ namespace ConnectHub.Notification.Services
     public class NotificationService : INotificationService
     {
         private readonly INotificationRepository _notificationRepository;
-        private readonly IHubContext<ChatHub> _hubContext;
+        private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IPresenceService _presenceService;
         private readonly SmtpSettings _smtpSettings;
 
         public NotificationService(
             INotificationRepository notificationRepository,
-            IHubContext<ChatHub> hubContext,
+            IHubContext<NotificationHub> hubContext,
             IPresenceService presenceService,
             IOptions<SmtpSettings> smtpSettings)
         {

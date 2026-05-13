@@ -69,7 +69,7 @@ namespace ConnectHub.Notification.Services
         {
             if (!_connections.TryGetValue(userId, out var connectionSet))
             {
-                return [];
+                return new List<string>();
             }
 
             lock (connectionSet)

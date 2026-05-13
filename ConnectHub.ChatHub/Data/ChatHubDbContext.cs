@@ -9,6 +9,7 @@ namespace ConnectHub.ChatHub.Data
 
         public DbSet<ChatRoom> ChatRooms => Set<ChatRoom>();
         public DbSet<RoomMember> RoomMembers => Set<RoomMember>();
+        public DbSet<Message> Messages => Set<Message>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -31,6 +32,15 @@ namespace ConnectHub.ChatHub.Data
                  .WithMany(r => r.Members)
                  .HasForeignKey(m => m.RoomId)
                  .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Message>(e =>
+            {
+                e.HasKey(m => m.MessageId);
+                e.Property(m => m.Content).IsRequired();
+                e.Property(m => m.MessageType).IsRequired().HasMaxLength(50);
+                e.HasIndex(m => new { m.SenderId, m.ReceiverId });
+                e.HasIndex(m => new { m.RoomId, m.CreatedAt });
             });
 
             modelBuilder.Entity<ChatRoom>().HasData(

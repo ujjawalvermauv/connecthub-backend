@@ -1,4 +1,5 @@
 using ConnectHub.Message.Models;
+using ConnectHub.Message.Interfaces;
 using ConnectHub.Message.Repositories;
 using MessageEntity = ConnectHub.Message.Models.Message;
 
@@ -77,11 +78,21 @@ namespace ConnectHub.Message.Services
             }
         }
 
-        public async Task MarkAllAsRead(int receiverId, int? roomId = null)
+        public async Task MarkAllAsRead(int receiverId, int? fromUserId = null)
         {
-            if (roomId.HasValue)
+            if (fromUserId.HasValue)
             {
-                await _messageRepository.MarkAllReadByRoomId(roomId.Value);
+                var unreadFromUser = await _messageRepository.FindUnreadByReceiverId(receiverId);
+                unreadFromUser = unreadFromUser.Where(m => m.SenderId == fromUserId.Value).ToList();
+                var readAtFromUser = DateTime.UtcNow;
+
+                foreach (var message in unreadFromUser)
+                {
+                    message.IsRead = true;
+                    message.ReadAt = readAtFromUser;
+                }
+
+                await _messageRepository.SaveChanges();
                 return;
             }
 
@@ -133,14 +144,14 @@ namespace ConnectHub.Message.Services
             return _messageRepository.FindRecentMessages(userId);
         }
 
-        public Task<List<MessageEntity>> SearchMessages(string query, int userId)
+        public Task<List<MessageEntity>> SearchMessages(string keyword, int? senderId, int? receiverId, int? roomId)
         {
-            if (string.IsNullOrWhiteSpace(query))
+            if (string.IsNullOrWhiteSpace(keyword))
             {
                 return Task.FromResult(new List<MessageEntity>());
             }
 
-            return _messageRepository.SearchMessages(query, userId);
+            return _messageRepository.SearchMessages(keyword, senderId, receiverId, roomId);
         }
 
         public Task<List<MessageEntity>> GetMessagesByRoom(int roomId)

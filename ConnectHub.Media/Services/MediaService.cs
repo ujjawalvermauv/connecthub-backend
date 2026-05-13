@@ -11,15 +11,26 @@ namespace ConnectHub.Media.Services
         private readonly IMediaRepository _mediaRepository;
         private readonly IBlobStorageGateway _blobStorageGateway;
         private readonly AzureBlobOptions _blobOptions;
+        private readonly MediaStorageOptions _storageOptions;
 
         public MediaService(
             IMediaRepository mediaRepository,
             IBlobStorageGateway blobStorageGateway,
             IOptions<AzureBlobOptions> blobOptions)
+            : this(mediaRepository, blobStorageGateway, blobOptions, Microsoft.Extensions.Options.Options.Create(new MediaStorageOptions()))
+        {
+        }
+
+        public MediaService(
+            IMediaRepository mediaRepository,
+            IBlobStorageGateway blobStorageGateway,
+            IOptions<AzureBlobOptions> blobOptions,
+            IOptions<MediaStorageOptions> storageOptions)
         {
             _mediaRepository = mediaRepository;
             _blobStorageGateway = blobStorageGateway;
             _blobOptions = blobOptions.Value;
+            _storageOptions = storageOptions.Value;
             ValidateBlobOptions();
         }
 
@@ -35,19 +46,26 @@ namespace ConnectHub.Media.Services
                 throw new ArgumentException("UploadedBy must be a valid user id.");
             }
 
+            ValidateFile(file);
+
             var fileId = Guid.NewGuid().ToString("N");
+            var storedFileName = BuildStoredFileName(fileId, file.FileName);
 
             await using var fileStream = file.OpenReadStream();
             var resolvedContentType = string.IsNullOrWhiteSpace(file.ContentType)
                 ? "application/octet-stream"
                 : file.ContentType;
-            var blobUrl = await _blobStorageGateway.UploadAsync(_blobOptions.ContainerName, fileId, fileStream, resolvedContentType);
+            var containerName = string.IsNullOrWhiteSpace(_storageOptions.ContainerName)
+                ? _blobOptions.ContainerName
+                : _storageOptions.ContainerName;
+
+            var blobUrl = await _blobStorageGateway.UploadAsync(containerName, storedFileName, fileStream, resolvedContentType);
 
             var mediaFile = new MediaFileEntity
             {
                 FileId = fileId,
                 UploadedBy = uploadedBy,
-                FileName = file.FileName,
+                FileName = storedFileName,
                 ContentType = resolvedContentType,
                 FileSizeKb = Math.Max(1, (long)Math.Ceiling(file.Length / 1024d)),
                 BlobUrl = blobUrl,
@@ -89,7 +107,7 @@ namespace ConnectHub.Media.Services
                 return;
             }
 
-            await _blobStorageGateway.DeleteIfExistsAsync(_blobOptions.ContainerName, mediaFile.FileId);
+            await _blobStorageGateway.DeleteIfExistsAsync(_blobOptions.ContainerName, mediaFile.FileName);
             await _mediaRepository.DeleteByFileId(fileId);
         }
 
@@ -103,7 +121,7 @@ namespace ConnectHub.Media.Services
 
             return await _blobStorageGateway.GenerateReadSasUrlAsync(
                 _blobOptions.ContainerName,
-                mediaFile.FileId,
+                mediaFile.FileName,
                 DateTimeOffset.UtcNow.AddHours(1));
         }
 
@@ -117,7 +135,7 @@ namespace ConnectHub.Media.Services
 
             foreach (var expiredFile in expiredFiles)
             {
-                await _blobStorageGateway.DeleteIfExistsAsync(_blobOptions.ContainerName, expiredFile.FileId);
+                await _blobStorageGateway.DeleteIfExistsAsync(_blobOptions.ContainerName, expiredFile.FileName);
                 await _mediaRepository.DeleteByFileId(expiredFile.FileId);
             }
         }
@@ -143,6 +161,64 @@ namespace ConnectHub.Media.Services
             {
                 throw new InvalidOperationException("AzureBlob:ContainerName is not configured for ConnectHub.Media.");
             }
+        }
+
+        private void ValidateFile(IFormFile file)
+        {
+            if (file.Length > _storageOptions.MaxUploadBytes)
+            {
+                throw new ArgumentException($"File exceeds the maximum allowed size of {_storageOptions.MaxUploadBytes / 1024 / 1024} MB.");
+            }
+
+            if (string.IsNullOrWhiteSpace(file.ContentType))
+            {
+                throw new ArgumentException("File content type is required.");
+            }
+
+            if (!IsSupportedContentType(file.ContentType))
+            {
+                throw new ArgumentException($"Unsupported file type: {file.ContentType}");
+            }
+        }
+
+        private static bool IsSupportedContentType(string contentType)
+        {
+            if (contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (contentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            var allowedContentTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "application/pdf",
+                "application/zip",
+                "application/octet-stream",
+                "text/plain",
+                "application/msword",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/vnd.ms-excel",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "application/vnd.ms-powerpoint",
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            };
+
+            return allowedContentTypes.Contains(contentType);
+        }
+
+        private static string BuildStoredFileName(string fileId, string originalFileName)
+        {
+            var extension = Path.GetExtension(Path.GetFileName(originalFileName));
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                return fileId;
+            }
+
+            return fileId + extension.ToLowerInvariant();
         }
     }
 }

@@ -68,64 +68,94 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Apply migrations
-using (var scope = app.Services.CreateScope())
+// Apply migrations and seed data
+try
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
-    await dbContext.Database.MigrateAsync();
-
-    if (!await dbContext.Users.AnyAsync(u => u.Email == "shubham@gmail.com"))
+    using (var scope = app.Services.CreateScope())
     {
-        var hasher = new PasswordHasher<User>();
-        var seedUser = new User
+        var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+        
+        try
         {
-            UserName = "shubham",
-            DisplayName = "Shubham",
-            Email = "shubham@gmail.com",
-            Role = "User",
-            IsActive = true,
-            IsOnline = false,
-            CreatedAt = DateTime.UtcNow,
-            LastSeen = DateTime.UtcNow
-        };
-
-        seedUser.PasswordHash = hasher.HashPassword(seedUser, "1234567890");
-        dbContext.Users.Add(seedUser);
-    }
-
-    if (!await dbContext.Users.AnyAsync(u => u.Email == "sarthak@gmail.com"))
-    {
-        var hasher = new PasswordHasher<User>();
-        var seedUser = new User
-        {
-            UserName = "sarthak",
-            DisplayName = "Sarthak",
-            Email = "sarthak@gmail.com",
-            Role = "User",
-            IsActive = true,
-            IsOnline = false,
-            CreatedAt = DateTime.UtcNow,
-            LastSeen = DateTime.UtcNow
-        };
-
-        seedUser.PasswordHash = hasher.HashPassword(seedUser, "1234567890");
-        dbContext.Users.Add(seedUser);
-    }
-
-    // Normalize existing users that have missing/empty emails so future logins by email work
-    var usersToFix = await dbContext.Users.Where(u => u.Email == null || u.Email == "" || u.Email.Trim() == "").ToListAsync();
-    if (usersToFix.Any())
-    {
-        foreach (var u in usersToFix)
-        {
-            // prefer userName based email, fallback to a generic placeholder
-            var name = string.IsNullOrWhiteSpace(u.UserName) ? $"user_{u.UserId}" : u.UserName;
-            u.Email = $"{name}@example.com";
+            await dbContext.Database.MigrateAsync();
+            Console.WriteLine("✅ Database migrations applied successfully.");
         }
-        Console.WriteLine($"Normalized {usersToFix.Count} users with missing emails.");
-    }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️ Database migration failed: {ex.Message}");
+            Console.WriteLine("Attempting to create database...");
+            try
+            {
+                await dbContext.Database.EnsureCreatedAsync();
+                Console.WriteLine("✅ Database created successfully.");
+            }
+            catch (Exception createEx)
+            {
+                Console.WriteLine($"❌ Failed to create database: {createEx.Message}");
+                throw;
+            }
+        }
 
-    await dbContext.SaveChangesAsync();
+        if (!await dbContext.Users.AnyAsync(u => u.Email == "shubham@gmail.com"))
+        {
+            var hasher = new PasswordHasher<User>();
+            var seedUser = new User
+            {
+                UserName = "shubham",
+                DisplayName = "Shubham",
+                Email = "shubham@gmail.com",
+                Role = "User",
+                IsActive = true,
+                IsOnline = false,
+                CreatedAt = DateTime.UtcNow,
+                LastSeen = DateTime.UtcNow
+            };
+
+            seedUser.PasswordHash = hasher.HashPassword(seedUser, "1234567890");
+            dbContext.Users.Add(seedUser);
+        }
+
+        if (!await dbContext.Users.AnyAsync(u => u.Email == "sarthak@gmail.com"))
+        {
+            var hasher = new PasswordHasher<User>();
+            var seedUser = new User
+            {
+                UserName = "sarthak",
+                DisplayName = "Sarthak",
+                Email = "sarthak@gmail.com",
+                Role = "User",
+                IsActive = true,
+                IsOnline = false,
+                CreatedAt = DateTime.UtcNow,
+                LastSeen = DateTime.UtcNow
+            };
+
+            seedUser.PasswordHash = hasher.HashPassword(seedUser, "1234567890");
+            dbContext.Users.Add(seedUser);
+        }
+
+        // Normalize existing users that have missing/empty emails so future logins by email work
+        var usersToFix = await dbContext.Users.Where(u => u.Email == null || u.Email == "" || u.Email.Trim() == "").ToListAsync();
+        if (usersToFix.Any())
+        {
+            foreach (var u in usersToFix)
+            {
+                // prefer userName based email, fallback to a generic placeholder
+                var name = string.IsNullOrWhiteSpace(u.UserName) ? $"user_{u.UserId}" : u.UserName;
+                u.Email = $"{name}@example.com";
+            }
+            Console.WriteLine($"Normalized {usersToFix.Count} users with missing emails.");
+        }
+
+        await dbContext.SaveChangesAsync();
+        Console.WriteLine("✅ Database seeding completed.");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"❌ Critical error during startup: {ex.Message}");
+    // Re-throw to fail startup if database creation ultimately failed
+    throw;
 }
 
 // ✅ Middleware Pipeline

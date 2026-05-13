@@ -5,11 +5,10 @@ namespace ConnectHub.Message.Data
 {
     public static class MessageSeedData
     {
-        public static readonly MessageEntity[] SeedMessages =
-        [
+        public static readonly MessageEntity[] SeedMessages = new MessageEntity[]
+        {
             new MessageEntity
             {
-                MessageId = 1,
                 SenderId = 2222,
                 ReceiverId = 4444,
                 Content = "Hey, are you free for a quick call?",
@@ -21,7 +20,6 @@ namespace ConnectHub.Message.Data
             },
             new MessageEntity
             {
-                MessageId = 2,
                 SenderId = 4444,
                 ReceiverId = 2222,
                 Content = "Yes, give me five minutes.",
@@ -34,7 +32,6 @@ namespace ConnectHub.Message.Data
             },
             new MessageEntity
             {
-                MessageId = 3,
                 SenderId = 2222,
                 RoomId = 101,
                 Content = "Welcome to the product planning room.",
@@ -47,7 +44,6 @@ namespace ConnectHub.Message.Data
             },
             new MessageEntity
             {
-                MessageId = 4,
                 SenderId = 3333,
                 RoomId = 101,
                 Content = "I uploaded the latest mockups.",
@@ -60,7 +56,6 @@ namespace ConnectHub.Message.Data
             },
             new MessageEntity
             {
-                MessageId = 5,
                 SenderId = 2222,
                 ReceiverId = 5555,
                 Content = "Let me know if the API changes are ready.",
@@ -71,6 +66,6 @@ namespace ConnectHub.Message.Data
                 SentAt = DateTime.UtcNow.AddMinutes(-8),
                 EditedAt = DateTime.UtcNow.AddMinutes(-7)
             }
-        ];
+        };
     }
 }

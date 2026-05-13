@@ -13,7 +13,7 @@ namespace ConnectHub.Message.Repositories
         Task<int> CountUnreadByReceiverId(int receiverId);
         Task MarkAllReadByRoomId(int roomId);
         Task DeleteByMessageId(int messageId);
-        Task<List<MessageEntity>> SearchMessages(string query, int userId);
+        Task<List<MessageEntity>> SearchMessages(string keyword, int? senderId, int? receiverId, int? roomId);
         Task<MessageEntity> AddMessage(MessageEntity message);
         Task SaveChanges();
     }

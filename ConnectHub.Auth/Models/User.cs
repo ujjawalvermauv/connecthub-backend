@@ -11,6 +11,8 @@ namespace ConnectHub.Auth.Models
 
         public string Role { get; set; } = "User";
         public string? AvatarUrl { get; set; }
+        // Legacy/alternate property name used by some controllers
+        public string? ProfilePictureUrl { get; set; }
         public string? Bio { get; set; }
 
         public bool IsOnline { get; set; }

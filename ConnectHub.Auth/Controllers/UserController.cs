@@ -1,6 +1,8 @@
 using ConnectHub.Auth.Interfaces;
 using ConnectHub.Auth.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ConnectHub.Auth.Controllers
 {
@@ -108,6 +110,42 @@ namespace ConnectHub.Auth.Controllers
         }
 
         /// <summary>
+        /// Get profile for authenticated user
+        /// </summary>
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<ActionResult<User>> GetProfile()
+        {
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdValue, out var userId))
+            {
+                return Unauthorized(new { message = "Invalid token: user id claim missing" });
+            }
+
+            var user = await _userService.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            return Ok(new
+            {
+                user.UserId,
+                user.UserName,
+                user.DisplayName,
+                user.Email,
+                user.Role,
+                user.AvatarUrl,
+                user.ProfilePictureUrl,
+                user.Bio,
+                user.IsOnline,
+                user.LastSeen,
+                user.CreatedAt,
+                user.IsActive
+            });
+        }
+
+        /// <summary>
         /// Update user profile
         /// </summary>
         [HttpPut("update/{userId}")]
@@ -115,8 +153,12 @@ namespace ConnectHub.Auth.Controllers
         {
             try
             {
+                if (profile == null)
+                {
+                    return BadRequest(new { message = "Profile cannot be null" });
+                }
                 // Prevent accidentally clearing the email to empty string
-                if (profile != null && profile.Email != null && string.IsNullOrWhiteSpace(profile.Email))
+                if (profile.Email != null && string.IsNullOrWhiteSpace(profile.Email))
                 {
                     return BadRequest(new { message = "Email cannot be empty" });
                 }

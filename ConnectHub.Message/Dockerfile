@@ -1,11 +1,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["ConnectHub.Message.csproj", "."]
-RUN dotnet restore "ConnectHub.Message.csproj"
+COPY ["ConnectHub.Message/ConnectHub.Message.csproj", "ConnectHub.Message/"]
+RUN dotnet restore "ConnectHub.Message/ConnectHub.Message.csproj"
 
 COPY . .
-WORKDIR "/src"
+WORKDIR "/src/ConnectHub.Message"
 RUN dotnet publish "ConnectHub.Message.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime

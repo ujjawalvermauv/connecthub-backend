@@ -1,11 +1,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["ConnectHub.Notification.csproj", "."]
-RUN dotnet restore "ConnectHub.Notification.csproj"
+COPY ["ConnectHub.Notification/ConnectHub.Notification.csproj", "ConnectHub.Notification/"]
+RUN dotnet restore "ConnectHub.Notification/ConnectHub.Notification.csproj"
 
 COPY . .
-WORKDIR "/src"
+WORKDIR "/src/ConnectHub.Notification"
 RUN dotnet publish "ConnectHub.Notification.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime

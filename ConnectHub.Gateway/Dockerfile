@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["ConnectHub.Gateway/ConnectHub.Gateway.csproj", "ConnectHub.Gateway/"]
+COPY ["ConnectHub.Gateway/ConnectHub.Gateway/ConnectHub.Gateway.csproj", "ConnectHub.Gateway/"]
 RUN dotnet restore "ConnectHub.Gateway/ConnectHub.Gateway.csproj"
 
 COPY . .

@@ -1,11 +1,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["ConnectHub.Media.csproj", "."]
-RUN dotnet restore "ConnectHub.Media.csproj"
+COPY ["ConnectHub.Media/ConnectHub.Media.csproj", "ConnectHub.Media/"]
+RUN dotnet restore "ConnectHub.Media/ConnectHub.Media.csproj"
 
 COPY . .
-WORKDIR "/src"
+WORKDIR "/src/ConnectHub.Media"
 RUN dotnet publish "ConnectHub.Media.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime

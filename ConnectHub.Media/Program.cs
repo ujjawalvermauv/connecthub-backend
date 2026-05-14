@@ -4,14 +4,17 @@ using ConnectHub.Media.Services;
 using ConnectHub.Media.Options;
 using Microsoft.EntityFrameworkCore;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    WebRootPath = "wwwroot"
+});
 
 // Read media listen URL from config (fallback to http://localhost:5005)
 var mediaUrl = builder.Configuration["ServiceUrls:MediaUrl"] ?? "http://localhost:5005";
 builder.WebHost.UseUrls(mediaUrl);
-builder.WebHost.UseWebRoot("wwwroot");
 
-var webRootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+var webRootPath = builder.Environment.WebRootPath;
 Directory.CreateDirectory(webRootPath);
 Directory.CreateDirectory(Path.Combine(webRootPath, "uploads"));
 
